@@ -1,8 +1,9 @@
+// ignore_for_file: must_be_immutable
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
   runApp(MyApp());
@@ -117,68 +118,6 @@ class LoginSection extends StatelessWidget {
   }
 }
 
-//sign up function
-signup(email, password) async {
-  //service url
-  var url = "http://localhost:4000/signup";
-
-  //sending request
-  final http.Response response = await http.post(
-    Uri.parse(url),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: jsonEncode(<String, String>{
-      'email': email,
-      'password': password,
-    }),
-  );
-
-  //debugging
-  print(response.body);
-
-  //save token in shared preferences
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  var parse = jsonDecode(response.body);
-  await prefs.setString('token', parse["token"]);
-  // if (response.statusCode == 201) {
-  // } else {
-  //   throw Exception('Failed to create album.');
-  // }
-}
-
-//login function
-login(email, password) async {
-  //server url
-  var url = "http://localhost:4000/login";
-
-  //sending request
-  final http.Response response = await http.post(
-    Uri.parse(url),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: jsonEncode(<String, String>{
-      'email': email,
-      'password': password,
-    }),
-  );
-
-  //debugging
-  print(response.body);
-
-  //saving token in shared preferences
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  var parse = jsonDecode(response.body);
-  await prefs.setString('token', parse["token"]);
-  // if (response.statusCode == 201) {
-  // } else {
-  //   throw Exception('Failed to create album.');
-  // }
-}
-
 class LandingScreen extends StatelessWidget {
   static const String id = "LandingScreen";
   @override
@@ -199,4 +138,43 @@ class LandingScreen extends StatelessWidget {
       ],
     ));
   }
+}
+
+// *** server handeling codes ***
+
+final channel = WebSocketChannel.connect(Uri.parse('ws://localhost:4050'));
+
+// Handles incoming messages from the WebSocket connection.
+Future<void> handleIncomingMessages(dynamic message) async {
+  print(message);
+
+  /// Gets an instance of [SharedPreferences] and decodes the JSON message
+  /// to extract the token, which is then saved in [SharedPreferences]
+  /// under the key 'token'.
+  /// executed in login/signup scenarios
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var parse = jsonDecode(message);
+  await prefs.setString('token', parse["token"]);
+}
+
+/// Closes the WebSocket connection by closing the sink.
+void closeWebSocket() {
+  channel.sink.close();
+}
+
+void _sendMessage(String route, Map<String, dynamic> data) {
+  final message = {'route': route, 'data': data};
+  channel.sink.add(jsonEncode(message));
+}
+
+/// Sends a login request with email and password to the
+/// WebSocket server at the /login route.
+login(email, password) {
+  _sendMessage('/login', {'email': email, 'password': password});
+}
+
+/// Sends a signup request with email and password to the
+/// WebSocket server at the /signup route.
+signup(email, password) {
+  _sendMessage('/signup', {'email': email, 'password': password});
 }
