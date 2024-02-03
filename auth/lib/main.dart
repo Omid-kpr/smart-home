@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -117,6 +119,28 @@ class LoginSection extends StatelessWidget {
   }
 }
 
+class LandingScreen extends StatelessWidget {
+  static const String id = "LandingScreen";
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Center(child: Text("Welcome to the Landing Screen")),
+        ElevatedButton.icon(
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.setString('token', 'null');
+              Navigator.pushNamed(context, LoginSection.id);
+            },
+            icon: Icon(Icons.send),
+            label: Text("Logout"))
+      ],
+    ));
+  }
+}
+
 //sign up function
 signup(email, password) async {
   //service url
@@ -173,30 +197,4 @@ login(email, password) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   var parse = jsonDecode(response.body);
   await prefs.setString('token', parse["token"]);
-  // if (response.statusCode == 201) {
-  // } else {
-  //   throw Exception('Failed to create album.');
-  // }
-}
-
-class LandingScreen extends StatelessWidget {
-  static const String id = "LandingScreen";
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Center(child: Text("Welcome to the Landing Screen")),
-        ElevatedButton.icon(
-            onPressed: () async {
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              await prefs.setString('token', 'null');
-              Navigator.pushNamed(context, LoginSection.id);
-            },
-            icon: Icon(Icons.send),
-            label: Text("Logout"))
-      ],
-    ));
-  }
 }
