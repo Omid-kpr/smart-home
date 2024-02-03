@@ -142,59 +142,79 @@ class LandingScreen extends StatelessWidget {
 }
 
 //sign up function
-signup(email, password) async {
+Future<bool> signup(email, password) async {
   //service url
   var url = "http://localhost:4000/signup";
 
-  //sending request
-  final http.Response response = await http.post(
-    Uri.parse(url),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: jsonEncode(<String, String>{
-      'email': email,
-      'password': password,
-    }),
-  );
+  try {
+    //sending request
+    final http.Response response = await http.post(
+      Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'password': password,
+      }),
+    );
 
-  //debugging
-  print(response.body);
+    //debugging
+    print(response.body);
 
-  //save token in shared preferences
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  var parse = jsonDecode(response.body);
-  await prefs.setString('token', parse["token"]);
-  // if (response.statusCode == 201) {
-  // } else {
-  //   throw Exception('Failed to create album.');
-  // }
+    //check response status code
+    if (response.statusCode == 201) {
+      //save token in shared preferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var parse = jsonDecode(response.body);
+      await prefs.setString('token', parse["token"]);
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    print('Error occurred during signup: $e');
+    // Handle the error here, e.g. show an error message to the user
+    return false;
+  }
 }
 
 //login function
-login(email, password) async {
+Future<bool> login(email, password) async {
   //server url
   var url = "http://localhost:4000/login";
 
-  //sending request
-  final http.Response response = await http.post(
-    Uri.parse(url),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: jsonEncode(<String, String>{
-      'email': email,
-      'password': password,
-    }),
-  );
+  try {
+    //sending request
+    final http.Response response = await http.post(
+      Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'password': password,
+      }),
+    );
 
-  //debugging
-  print(response.body);
+    //debugging
+    print(response.body);
 
-  //saving token in shared preferences
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  var parse = jsonDecode(response.body);
-  await prefs.setString('token', parse["token"]);
+    //check response status code
+    if (response.statusCode == 200) {
+      //saving token in shared preferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var parse = jsonDecode(response.body);
+      await prefs.setString('token', parse["token"]);
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    print('Error occurred during login: $e');
+    // Handle the error here, e.g. show an error message to the user
+    return false;
+  }
 }
